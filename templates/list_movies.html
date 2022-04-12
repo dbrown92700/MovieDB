@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Movies Database</title>
+</head>
+<body>
+<table>
+    <tr>
+        <td width=300>Showing results for genre <b>{{genre}}</b></td>
+        <td width=300 align=center><a href="/">Show All Movies</a></td>
+        <td width=300 align=right><a href="/search">Add a new movie</a></td>
+    </tr>
+</table>
+<br>
+Showing names matching: <b>{{name}}</b>
+<br>
+<form target="/">
+    Search database by name:
+    <input type="text" name="name">
+    <input type="submit">
+
+</form>
+<br>
+<table>
+    {{movie_table}}
+</table>
+</body>
+</html>
