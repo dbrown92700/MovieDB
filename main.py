@@ -16,7 +16,7 @@ app.secret_key = 'any random string'
 with open('movies.csv', 'r') as movie_file:
     lines = movie_file.readlines()
 movie_list = []
-values = ['id', 'title', 'image', 'rating', 'plot', 'genres']
+values = ['id', 'title', 'image', 'rating', 'plot', 'genres', 'watched', 'available']
 for item in lines:
     movie_list.append({values[i]: item.split(',')[i].rstrip('\n') for i in range(len(values))})
 now = datetime.now()
@@ -42,30 +42,96 @@ def list_movies():
 
     genre = request.args.get('genre') or 'All'
     name = request.args.get('name') or ''
+    page = int(request.args.get('page') or '1')
+    watched = request.args.get('watched') or ''
+    available = request.args.get('available') or ''
+
+    print(f'Page {page}')
+
     if name:
         name = name.split(' ')
-    movie_table = ''
+    else:
+        name = []
+
+    match_list = []
+    full_genre_list = []
     for movie in movie_list:
         genres = movie['genres'].split(':')
-        if (genre == 'All') or (genre in genres):
-            match = True
-            if name:
-                for term in name:
-                    if term.lower() not in movie['title'].lower():
-                        match = False
-            if match:
-                movie_table += f'<tr>\n \
-                        <td width=200>\
-                        <a href="https://imdb.com/title/{movie["id"]}/" target="_imdb">{movie["title"]}</a>\n \
-                        <br><br><br><div align=center><a href="/delete?id={movie["id"]}">delete</a></div></td>\n \
-                        <td width=90 align=left><img src="{movie["image"]}" height=120 width=80></td>\n \
-                        <td width=30>{movie["rating"]}</td>\n \
-                        <td width=500 style="border: 1px solid black;">{movie["plot"].replace("~^",",")}</td>\n \
-                        <td width=80>'
-                for this in movie["genres"].split(':'):
-                    movie_table += f'<a href="/?genre={this}">{this}</a><br>\n'
-                movie_table += '</td></tr>'
-    return render_template('list_movies.html', genre=genre, name=' '.join(name), movie_table=Markup(movie_table))
+        for genre_item in genres:
+            if genre_item not in full_genre_list:
+                full_genre_list.append(genre_item)
+        if genre not in (genres + ['All']):
+            continue
+        if watched and (watched != movie['watched']):
+            continue
+        if available and (available != movie['available']):
+            continue
+        if name:
+            for term in name:
+                if term.lower() in movie['title'].lower():
+                    match_list.append(movie)
+                    break
+        else:
+            match_list.append(movie)
+
+    movie_table = ''
+    first = (page-1)*10
+    last = min(page*10, len(match_list))
+    for movie in match_list[first:last]:
+        movie_table += f'<tr>\n' \
+                       f'<td width=200>' \
+                       f'<a href="https://imdb.com/title/{movie["id"]}/" target="_imdb">' \
+                       f'{movie["title"].replace("~^", ",")}</a>\n' \
+                       f'<br><br><br><div align=center><a href="/edit?id={movie["id"]}">Edit</a></div></td>\n' \
+                       f'<td width=90 align=left><img src="{movie["image"]}" height=120 width=80></td>\n' \
+                       f'<td width=30>{movie["rating"]}</td>\n' \
+                       f'<td width=300 style="border: 1px solid black;">\n' \
+                       f'<div style="height:120px;width:300px;overflow:auto;">' \
+                       f'{movie["plot"].replace("~^",",")}</td>\n<td width=100>'
+        for this in movie["genres"].split(':'):
+            movie_table += f'{this}<br>\n'
+        movie_table += f'<br>Watched: {movie["watched"].title()}<br>Available: {movie["available"].title()}</td></tr>'
+
+    genre_menu = ''
+    full_genre_list.sort()
+    for genre_item in full_genre_list:
+        selected = ''
+        if genre == genre_item:
+            selected = ' selected'
+        genre_menu += f'<option value="{genre_item}"{selected}>{genre_item}</option>\n'
+
+    watched_radio = ''
+    for choice in ['yes', 'no']:
+        selected = ''
+        if choice == watched:
+            selected = 'checked'
+        watched_radio += f'<td>{choice.title()} <input type="radio" name="watched" value="{choice}" {selected}></td>'
+
+    available_radio = ''
+    for choice in ['yes', 'no']:
+        selected = ''
+        if choice == available:
+            selected = 'checked'
+        available_radio += f'<td>{choice.title()} <input type="radio" name="available"' \
+                           f'value="{choice}" {selected}></td>'
+
+    url = f'/?name={"+".join(name)}&genre={genre}&watched={watched}&available={available}'
+
+    pages = f'<td width="350" align="center">Movies {first+1}-{last} of {len(match_list)} movies</td>\n' \
+            f'<td width="350" align="center">'
+    if page == 1:
+        pages += 'prev<<<'
+    else:
+        pages += f'<a href="{url}&page={page-1}">prev<<< </a>'
+    pages += f' <b>Page {page}</b> '
+    if len(match_list) > page*10:
+        pages += f'<a href="{url}&page={page+1}"> >>>next</a></td>\n'
+    else:
+        pages += '>>>next</td>\n'
+
+    return render_template('list_movies.html', genre_menu=Markup(genre_menu), watched_radio=Markup(watched_radio),
+                           available_radio=Markup(available_radio), name=' '.join(name), pages=Markup(pages),
+                           movie_table=Markup(movie_table))
 
 
 @app.route('/search')
@@ -81,24 +147,19 @@ def search_result():
     search_text = request.args.get("search_text").replace('+', '%20')
     results = json.loads(requests.get(f'https://imdb-api.com/en/API/Search/{api_key}/{search_text}').text)
 
-    page = '<html>\n\
-           <head>\n\
-           <meta charset="UTF-8">\n\
-           <meta name="viewport" content="width=400">\
-           <title>IMDB Search</title>\
-           </head>\
-           <body><br>\n\
-           Search results for: <b>{results["expression"]}</b><br>\n\
-           <table>\n'
+    if results['results'] is None:
+        return render_template('error.html', err=results, key=api_key)
+
+    expression = results["expression"]
+    movie_table = ''
     for result in results['results']:
-        page += f'<tr>\n \
+        movie_table += f'<tr>\n \
                 <td width=200><a href="https://imdb.com/title/{result["id"]}/" target="_imdb">{result["title"]}<br> \
                 {result["description"]}</a></td>\n \
                 <td width=100 align=left><img src="{result["image"]}" height=120 width=80></td>\n \
                 <td width=50><a href="/add?id={result["id"]}">Add</a></td>\n'
-    page += '</body></html>'
 
-    return Markup(page)
+    return render_template('search_result.html', expression=expression, movie_table=Markup(movie_table))
 
 
 @app.route('/add')
@@ -117,8 +178,9 @@ def add_movie():
 
     genres = title['genres'].split(',')
     genres = ':'.join([genres[x].lstrip(' ') for x in range(len(genres))])
-    new_movie = {'id': imdb_id, 'title': title['fullTitle'], 'image': title['image'], 'rating': title['imDbRating'],
-                 'plot': title['plot'].replace(',', '~^'), 'genres': genres}
+    new_movie = {'id': imdb_id, 'title': title['fullTitle'].replace(',', '~^'), 'image': title['image'],
+                 'rating': title['imDbRating'], 'plot': title['plot'].replace(',', '~^'), 'genres': genres,
+                 'watched': 'no', 'available': 'yes'}
     found = False
     for movie in movie_list:
         if movie['id'] == new_movie['id']:
@@ -134,7 +196,49 @@ def add_movie():
 
     write_movie_file()
 
-    return redirect('/')
+    return redirect(f'/edit?id={imdb_id}')
+
+
+@app.route('/edit')
+def edit_movie():
+
+    global movie_list
+
+    imdb_id = request.args.get("id")
+    for movie in movie_list:
+        if movie['id'] == imdb_id:
+            break
+    movie_table = f'<tr>\n' \
+                  f'<td width=200><a href="https://imdb.com/title/{movie["id"]}/" target="_imdb">' \
+                  f'{movie["title"].replace("~^",",")}</a></td>\n' \
+                  f'<td width=90 align=left><img src="{movie["image"]}" height=120 width=80></td>\n' \
+                  f'<td width=30>{movie["rating"]}</td>\n' \
+                  f'<td width=300 style="border: 1px solid black;">\n' \
+                  f'<div style="height:120px;width:300px;overflow:auto;">{movie["plot"].replace("~^", ",")}</td>\n' \
+                  f'<td width=80>'
+    for this in movie["genres"].split(':'):
+        movie_table += f'{this}<br>\n'
+    movie_table += f'</td></tr></table>\n'
+
+    watched_radio = ''
+    for choice in ['yes', 'no']:
+        selected = ''
+        if choice == movie['watched']:
+            selected = 'checked'
+        watched_radio += f'<td width="50">{choice.title()} ' \
+                         f'<input type="radio" name="watched" value="{choice}" {selected}></td>'
+
+    available_radio = ''
+    for choice in ['yes', 'no']:
+        selected = ''
+        if choice == movie['available']:
+            selected = 'checked'
+        available_radio += f'<td>{choice.title()} ' \
+                           f'<input type="radio" name="available" value="{choice}" {selected}></td>'
+
+    return render_template('edit_movie.html', title=movie['title'], movie_table=Markup(movie_table),
+                           watched_radio=Markup(watched_radio), available_radio=Markup(available_radio),
+                           id=movie['id'])
 
 
 @app.route('/delete')
@@ -145,8 +249,31 @@ def delete_movie():
     imdb_id = request.args.get("id")
     for movie in movie_list:
         if movie['id'] == imdb_id:
-            movie_list.pop(movie_list.index(movie))
+            list_index = movie_list.index(movie)
+            movie_list.pop(list_index)
     write_movie_file()
+
+    return redirect('/')
+
+
+@app.route('/save')
+def save_movie():
+
+    global movie_list
+
+    imdb_id = request.args.get("id")
+    watched = request.args.get("watched")
+    available = request.args.get("available")
+
+    print(f'ID:{imdb_id} Watched:{watched} Available: {available}')
+
+    for movie in movie_list:
+        if movie['id'] == imdb_id:
+            list_index = movie_list.index(movie)
+            movie_list[list_index]['watched'] = watched
+            movie_list[list_index]['available'] = available
+    write_movie_file()
+    print(list_index)
     return redirect('/')
 
 

@@ -1,26 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta name="viewport" content="width=700">
     <meta charset="UTF-8">
     <title>Movies Database</title>
 </head>
 <body>
+<br>
+
+<script type="text/javascript">
+function resetInput(id) {
+   document.getElementById(id).value="";
+}
+
+function resetRadio(id) {
+   var ele = document.getElementsByName(id);
+   for(var i=0;i<ele.length;i++)
+      ele[i].checked = false;
+      }
+</script>
+
+<form target="/">
+    <table>
+        <tr><td>Search by name:</td><td colspan="3"><input type="text" name="name" value="{{name}}"></td></tr>
+        <tr><td>Search by genre:</td>
+            <td colspan="3">
+                <select name="genre">
+                    <option value="">None</option>
+                    {{genre_menu}}
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td>Watched:</td>
+            {{watched_radio}}
+            <td><input type="button" id="watch_reset" onclick="resetRadio('watched')" value="reset"></td>
+        </tr>
+        <tr>
+            <td>Available:</td>
+            {{available_radio}}
+            <td><input type="button" id="avail_reset" onclick="resetRadio('available')" value="reset"></td>
+        </tr>
+        <tr>
+            <td><input type="submit"></td>
+            <td colspan="3"><a href="/">Show All Movies</a></td>
+        </tr>
+</form>
+</table>
 <table>
     <tr>
-        <td width=300>Showing results for genre <b>{{genre}}</b></td>
-        <td width=300 align=center><a href="/">Show All Movies</a></td>
-        <td width=300 align=right><a href="/search">Add a new movie</a></td>
+        <td width=700 align=right><a href="/search">Add a new movie</a></td>
     </tr>
 </table>
-<br>
-Showing names matching: <b>{{name}}</b>
-<br>
-<form target="/">
-    Search database by name:
-    <input type="text" name="name">
-    <input type="submit">
 
-</form>
+<br>
+<table>
+    <tr>
+        {{pages}}
+    </tr>
+</table>
 <br>
 <table>
     {{movie_table}}

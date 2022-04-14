@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=400">
+    <title>IMDB Search</title>
+</head>
+<body>
+<br>
+IMDB Record for <b>{{title}}</b><br>
+<br>
+<table>
+    {{movie_table}}
+</table>
+<form action="/save">
+    <table>
+        <tr><td width="100">Watched:</td>{{watched_radio}}</tr>
+        <tr><td width="100">Available:</td>{{available_radio}}</tr>
+    </table>
+    <button type="submit" name="id" value="{{id}}" style="width: 200px;">Save</button>
+</form>
+<br>
+<form action="/delete">
+    <button type="submit" name="id" value="{{id}}" style="width: 200px;">Delete</button>
+</form>
+</body>
+</html>
