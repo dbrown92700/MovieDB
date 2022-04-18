@@ -16,7 +16,7 @@ app.secret_key = 'any random string'
 db_path = os.environ.get('MOVIE_DB_PATH')
 app_url = os.environ.get('SCRIPT_NAME')
 
-with open(f'{db_path}/movies.csv', 'r') as movie_file:
+with open(f'{db_path}/movies.csv', 'rb') as movie_file:
     lines = movie_file.readlines()
 movie_list = []
 values = ['id', 'title', 'image', 'rating', 'plot', 'genres', 'watched', 'available']
@@ -30,7 +30,7 @@ def write_movie_file():
 
     global movie_list
 
-    with open(f'{db_path}/movies.csv', 'w') as mov_file:
+    with open(f'{db_path}/movies.csv', 'wb') as mov_file:
         for movie in movie_list:
             mov_file.write(','.join(movie.values()) + '\n')
 
