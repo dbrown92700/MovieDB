@@ -179,9 +179,9 @@ def add_movie():
     new_movie = {'id': imdb_id, 'title': title['fullTitle'].replace(',', '~^'), 'image': title['image'],
                  'rating': title['imDbRating'], 'plot': title['plot'].replace(',', '~^'), 'genres': genres,
                  'watched': 'no', 'available': 'yes'}
-    for value in new_movie:
-        new_movie[value] = new_movie[value].encode('utf-8')
-        print(new_movie[value])
+    # for value in new_movie:
+    #     new_movie[value] = new_movie[value].encode('utf-8')
+    #     print(new_movie[value])
     found = False
     for movie in movie_list:
         if movie['id'] == new_movie['id']:
