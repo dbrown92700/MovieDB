@@ -197,7 +197,7 @@ def add_movie():
 
     write_movie_file()
 
-    return redirect(f'/edit?id={imdb_id}')
+    return redirect(f'{app_url}/edit?id={imdb_id}')
 
 
 @app.route('/edit')
@@ -254,7 +254,7 @@ def delete_movie():
             movie_list.pop(list_index)
     write_movie_file()
 
-    return redirect('/')
+    return redirect(f'{app_url}/')
 
 
 @app.route('/save')
@@ -272,7 +272,7 @@ def save_movie():
             movie_list[list_index]['watched'] = watched
             movie_list[list_index]['available'] = available
     write_movie_file()
-    return redirect('/')
+    return redirect(f'{app_url}/')
 
 
 if __name__ == '__main__':
