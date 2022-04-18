@@ -21,7 +21,7 @@ with open(f'{db_path}/movies.csv', 'rb') as movie_file:
 movie_list = []
 values = ['id', 'title', 'image', 'rating', 'plot', 'genres', 'watched', 'available']
 for item in lines:
-    movie_list.append({values[i]: item.split(',')[i].rstrip('\n') for i in range(len(values))})
+    movie_list.append({values[i]: item.decode('utf-8').split(',')[i].rstrip('\n') for i in range(len(values))})
 now = datetime.now()
 os.rename(f'{db_path}/movies.csv', f'{db_path}/movies{now.month:02}{now.day:02}{now.year:02}-{now.hour:02}{now.minute:02}.csv')
 
