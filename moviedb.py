@@ -172,11 +172,7 @@ def add_movie():
     api_key = os.environ.get('IMDB_API_KEY')
 
     url = f'https://imdb-api.com/en/API/Title/{api_key}/{imdb_id}'
-    print(url)
-
     title = json.loads(requests.get(url).text)
-
-    print(json.dumps(title, indent=2))
 
     genres = title['genres'].split(',')
     genres = ':'.join([genres[x].lstrip(' ') for x in range(len(genres))])
@@ -185,6 +181,7 @@ def add_movie():
                  'watched': 'no', 'available': 'yes'}
     for value in new_movie:
         new_movie[value] = new_movie[value].encode('utf-8')
+        print(new_movie[value])
     found = False
     for movie in movie_list:
         if movie['id'] == new_movie['id']:
