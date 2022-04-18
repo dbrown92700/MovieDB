@@ -49,8 +49,6 @@ def list_movies():
     watched = request.args.get('watched') or ''
     available = request.args.get('available') or ''
 
-    print(f'Page {page}')
-
     if name:
         name = name.split(' ')
     else:
@@ -185,6 +183,8 @@ def add_movie():
     new_movie = {'id': imdb_id, 'title': title['fullTitle'].replace(',', '~^'), 'image': title['image'],
                  'rating': title['imDbRating'], 'plot': title['plot'].replace(',', '~^'), 'genres': genres,
                  'watched': 'no', 'available': 'yes'}
+    for value in new_movie:
+        new_movie[value] = new_movie[value].encode('utf-8')
     found = False
     for movie in movie_list:
         if movie['id'] == new_movie['id']:
