@@ -23,7 +23,7 @@ values = ['id', 'title', 'image', 'rating', 'plot', 'genres', 'watched', 'availa
 for item in lines:
     movie_list.append({values[i]: item.split(',')[i].rstrip('\n') for i in range(len(values))})
 now = datetime.now()
-os.rename('movies.csv', f'movies{now.month:02}{now.day:02}{now.year:02}-{now.hour:02}{now.minute:02}.csv')
+os.rename(f'{db_path}movies.csv', f'{db_path}movies{now.month:02}{now.day:02}{now.year:02}-{now.hour:02}{now.minute:02}.csv')
 
 
 def write_movie_file():
