@@ -13,7 +13,10 @@ from datetime import datetime
 app = Flask(__name__)
 app.secret_key = 'any random string'
 
-with open('movies.csv', 'r') as movie_file:
+db_path = os.environ.get('MOVIE_DB_PATH')
+app_url = os.environ.get('SCRIPT_NAME')
+
+with open(f'{db_path}/movies.csv', 'r') as movie_file:
     lines = movie_file.readlines()
 movie_list = []
 values = ['id', 'title', 'image', 'rating', 'plot', 'genres', 'watched', 'available']
@@ -82,7 +85,7 @@ def list_movies():
                        f'<td width=200>' \
                        f'<a href="https://imdb.com/title/{movie["id"]}/" target="_imdb">' \
                        f'{movie["title"].replace("~^", ",")}</a>\n' \
-                       f'<br><br><br><div align=center><a href="/edit?id={movie["id"]}">Edit</a></div></td>\n' \
+                       f'<br><br><br><div align=center><a href="{app_url}/edit?id={movie["id"]}">Edit</a></div></td>\n' \
                        f'<td width=90 align=left><img src="{movie["image"]}" height=120 width=80></td>\n' \
                        f'<td width=30>{movie["rating"]}</td>\n' \
                        f'<td width=300 style="border: 1px solid black;">\n' \
@@ -115,7 +118,7 @@ def list_movies():
         available_radio += f'<td>{choice.title()} <input type="radio" name="available"' \
                            f'value="{choice}" {selected}></td>'
 
-    url = f'/?name={"+".join(name)}&genre={genre}&watched={watched}&available={available}'
+    url = f'{app_url}/?name={"+".join(name)}&genre={genre}&watched={watched}&available={available}'
 
     pages = f'<td width="350" align="center">Movies {first+1}-{last} of {len(match_list)} movies</td>\n' \
             f'<td width="350" align="center">'
@@ -131,13 +134,13 @@ def list_movies():
 
     return render_template('list_movies.html', genre_menu=Markup(genre_menu), watched_radio=Markup(watched_radio),
                            available_radio=Markup(available_radio), name=' '.join(name), pages=Markup(pages),
-                           movie_table=Markup(movie_table))
+                           movie_table=Markup(movie_table), app_url=app_url)
 
 
 @app.route('/search')
 def search():
 
-    return render_template('search.html')
+    return render_template('search.html', app_url=app_url)
 
 
 @app.route('/results')
@@ -148,7 +151,7 @@ def search_result():
     results = json.loads(requests.get(f'https://imdb-api.com/en/API/Search/{api_key}/{search_text}').text)
 
     if results['results'] is None:
-        return render_template('error.html', err=results, key=api_key)
+        return render_template('error.html', err=results, key=api_key, app_url=app_url)
 
     expression = results["expression"]
     movie_table = ''
@@ -157,9 +160,10 @@ def search_result():
                 <td width=200><a href="https://imdb.com/title/{result["id"]}/" target="_imdb">{result["title"]}<br> \
                 {result["description"]}</a></td>\n \
                 <td width=100 align=left><img src="{result["image"]}" height=120 width=80></td>\n \
-                <td width=50><a href="/add?id={result["id"]}">Add</a></td>\n'
+                <td width=50><a href="{app_url}/add?id={result["id"]}">Add</a></td>\n'
 
-    return render_template('search_result.html', expression=expression, movie_table=Markup(movie_table))
+    return render_template('search_result.html', expression=expression, movie_table=Markup(movie_table),
+                           app_url=app_url)
 
 
 @app.route('/add')
@@ -238,7 +242,7 @@ def edit_movie():
 
     return render_template('edit_movie.html', title=movie['title'], movie_table=Markup(movie_table),
                            watched_radio=Markup(watched_radio), available_radio=Markup(available_radio),
-                           id=movie['id'])
+                           id=movie['id'], app_url=app_url)
 
 
 @app.route('/delete')
