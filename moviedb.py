@@ -266,15 +266,12 @@ def save_movie():
     watched = request.args.get("watched")
     available = request.args.get("available")
 
-    print(f'ID:{imdb_id} Watched:{watched} Available: {available}')
-
     for movie in movie_list:
         if movie['id'] == imdb_id:
             list_index = movie_list.index(movie)
             movie_list[list_index]['watched'] = watched
             movie_list[list_index]['available'] = available
     write_movie_file()
-    print(list_index)
     return redirect('/')
 
 
