@@ -23,7 +23,8 @@ values = ['id', 'title', 'image', 'rating', 'plot', 'genres', 'watched', 'availa
 for item in lines:
     movie_list.append({values[i]: item.decode('utf-8').split(',')[i].rstrip('\n') for i in range(len(values))})
 now = datetime.now()
-os.rename(f'{db_path}/movies.csv', f'{db_path}/movies{now.month:02}{now.day:02}{now.year:02}-{now.hour:02}{now.minute:02}.csv')
+os.rename(f'{db_path}/movies.csv', f'{db_path}/movies{now.month:02}{now.day:02}{now.year:02}-{now.hour:02}'
+                                   f'{now.minute:02}.csv')
 
 
 def write_movie_file():
@@ -83,7 +84,8 @@ def list_movies():
                        f'<td width=200>' \
                        f'<a href="https://imdb.com/title/{movie["id"]}/" target="_imdb">' \
                        f'{movie["title"].replace("~^", ",")}</a>\n' \
-                       f'<br><br><br><div align=center><a href="{app_url}/edit?id={movie["id"]}">Edit</a></div></td>\n' \
+                       f'<br><br><br><div align=center><a href="{app_url}/edit?id={movie["id"]}">Edit</a>' \
+                       f'</div></td>\n' \
                        f'<td width=90 align=left><img src="{movie["image"]}" height=120 width=80></td>\n' \
                        f'<td width=30>{movie["rating"]}</td>\n' \
                        f'<td width=300 style="border: 1px solid black;">\n' \
