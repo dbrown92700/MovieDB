@@ -32,7 +32,7 @@ def write_movie_file():
 
     with open(f'{db_path}/movies.csv', 'wb') as mov_file:
         for movie in movie_list:
-            mov_file.write(','.join(movie.values()) + '\n')
+            mov_file.write((','.join(movie.values()) + '\n').encode('utf-8'))
 
 
 write_movie_file()
